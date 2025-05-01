@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSerial Flash Writer</title>
+</head>
+<body>
+  <h1>WebSerial Flash Writer</h1>
+  <h2>File Selection or Download File from URL</h2>
+  <!-- <h2>Download File from URL</h2>-->
+  <input type="text" id="urlInput" placeholder="Enter file URL" />
+  <select id="urlSelect">
+    <option value="">Select a URL</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/hello.spk">hello.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/adc_monitor.spk">adc_monitor.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ahrs_pwbimu.spk">ahrs_pwbimu.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/alarm.spk">alarm.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/asmp.spk">asmp.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ble_central.spk">ble_central.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ble_mouse_central.spk">ble_mouse_central.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ble_peripheral.spk">ble_periperal.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ble_toio_central.spk">ble_toio_central.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/camera.spk">camera.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/charger.spk">charger.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/cxd5602pwbimu.spk">cxd5602pwbimu.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/cxd5602pwbimu_logger.spk">cxd5602pwbimu_logger.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/decimator.spk">decimator.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/fsperf.spk">fsperf.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/ftp.spk">ftp.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/fwupdate.spk">fwupdate.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/gnss.spk">gnss.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/gnss_addon.spk">gnss_addon.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/gnss_atcmd.spk">gnss_atcmd.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/hello.spk">hello.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/helloxx.spk">helloxx.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/led_blink.spk">led_blink.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/lte_http_get.spk">lte_http_get.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/lte_lwm2m.spk">lte_lwm2m.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/nxdemo.spk">nxdemo.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/pwm.spk">pwm.spk</option>
+    <option value="https://baggio63446333.github.io/spresense/downloads/examples/watchdog.spk">watchdog.spk</option>
+  </select>
+  <button id="downloadButton">Download File</button>
+  <input type="file" id="fileInput" />
+ 
+  <h2>Flash Write</h2>
+  <button id="sendButton">Connect Serial Port</button>
+ 
+  <p id="status">Status: Ready...</p>
+ 
+  <script>
+    async function downloadFile(url) {
+      const statusElement = document.getElementById('status');
+      try {
+        const response = await fetch(url, { redirect: "follow" });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+ 
+        const blob = await response.blob();
+ 
+        // URLからファイル名を取得
+        const urlParts = url.split('/');
+        const fileName = urlParts[urlParts.length - 1] || "downloaded_file";
+ 
+        const file = new File([blob], fileName, { type: blob.type });
+ 
+        // ダウンロードしたファイルを仮想的に選択状態にする
+        const fileInput = document.getElementById('fileInput');
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+ 
+        statusElement.textContent = `Status: File "${fileName}" downloaded and ready.`;
+      } catch (error) {
+        statusElement.textContent = `Error: ${error.message}`;
+        console.error("Error downloading file:", error);
+      }
+    }
+ 
+    // ダウンロードボタンのクリックイベント
+    document.getElementById('downloadButton').addEventListener('click', async () => {
+      const urlInput = document.getElementById('urlInput');
+      const urlSelect = document.getElementById('urlSelect');
+ 
+      // URL入力欄が優先される
+      const url = urlInput.value.trim() || urlSelect.value;
+ 
+      if (!url) {
+        document.getElementById('status').textContent = "Error: Enter a valid URL.";
+        return;
+      }
+ 
+      document.getElementById('status').textContent = "Status: Downloading file...";
+      await downloadFile(url);
+    });
+ 
+    async function readWithTimeout(reader, timeout) {
+      const timeoutPromise = new Promise(resolve =>
+        setTimeout(() => resolve({ value: null, done: true }), timeout)
+      );
+ 
+      return Promise.race([
+        reader.read(),
+        timeoutPromise
+      ]);
+    }
+ 
+    async function waitForUpdaterPrompt(port, prompt, sendR = true, timeout = 1000) {
+      const writer = port.writable.getWriter();
+      const reader = port.readable.getReader();
+      const decoder = new TextDecoder();
+      let received = "";
+      const startTime = Date.now();
+ 
+      try {
+        while (true) {
+          if (sendR) {
+            // Toggle DTR to reset
+            await port.setSignals({ dataTerminalReady: false });
+            await port.setSignals({ dataTerminalReady: true });
+            await port.setSignals({ dataTerminalReady: false });
+ 
+            // Send 'r' for a certain period of time
+            duration = 200;
+            const startTime = Date.now();
+            while (Date.now() - startTime < duration) {
+              await writer.write(new TextEncoder().encode("r"));
+              await new Promise(resolve => setTimeout(resolve, 10)); // 10ms
+            }
+          }
+ 
+          // Receive data
+          const { value, done } = await readWithTimeout(reader, 1000);
+          if (done) break;
+ 
+          received += decoder.decode(value);
+          console.log(`Received: ${received}`);
+ 
+          // Return true if the prompt is found
+          if (received.includes(prompt)) {
+            await writer.write(new TextEncoder().encode("\r\n"));
+            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
+            return true;
+          }
+ 
+          // Check timeout
+          if (Date.now() - startTime > timeout) {
+            console.log("timeout");
+            return false;
+          }
+        }
+      } catch (error) {
+        console.error("Error: ", error);
+      } finally {
+        writer.releaseLock();
+        reader.releaseLock();
+      }
+ 
+      return false;
+    }
+ 
+    async function sendXmodemData(port, fileData) {
+      const statusElement = document.getElementById('status');
+      const writer = port.writable.getWriter();
+      const reader = port.readable.getReader();
+ 
+      try {
+        // XMODEM-1K
+        const STX = 0x02; // Start of Header (for 1024 bytes)
+        const EOT = 0x04; // End of Transmission
+        const ACK = 0x06; // Acknowledge
+        const NAK = 0x15; // Negative Acknowledge
+        const CAN = 0x18; // Cancel
+        const C = 0x43;   // ASCII 'C' (CRC request)
+        const BLOCK_SIZE = 1024; // 1024 bytes
+ 
+        let blockNumber = 1;
+ 
+        // Split data into 1024-byte chunks
+        const chunks = [];
+        for (let i = 0; i < fileData.length; i += BLOCK_SIZE) {
+          const chunk = fileData.slice(i, i + BLOCK_SIZE);
+          chunks.push(chunk);
+        }
+ 
+        console.log(`Split data to be sent into ${chunks.length} blocks (1block = ${BLOCK_SIZE} bytes)`);
+ 
+        // Wait for initial response (NAK or 'C')
+        let initialResponse = null;
+        while (true) {
+          const { value } = await reader.read();
+          if (value[0] === NAK || value[0] === C) {
+            initialResponse = value[0];
+            break;
+          } else {
+            console.log(`Invalid response: ${value[0]}`);
+          }
+        }
+ 
+        // Send file
+        for (const chunk of chunks) {
+          const paddedChunk = new Uint8Array(BLOCK_SIZE).fill(0x1A); // 0x1A padding
+          paddedChunk.set(chunk);
+ 
+          const packet = new Uint8Array(3 + BLOCK_SIZE + 2); // STX + Block Number + Data + CRC (2 bytes)
+          packet[0] = STX; // for 1024 bytes
+          packet[1] = blockNumber;
+          packet[2] = 0xFF - blockNumber; // Block Number Complement
+          packet.set(paddedChunk, 3);
+ 
+          // CRC calculation
+          let crc = 0;
+          for (let i = 3; i < 3 + BLOCK_SIZE; i++) {
+            crc = ((crc << 8) ^ crc16Table[((crc >> 8) ^ packet[i]) & 0xFF]) & 0xFFFF;
+          }
+          packet[3 + BLOCK_SIZE] = (crc >> 8) & 0xFF;
+          packet[3 + BLOCK_SIZE + 1] = crc & 0xFF;
+ 
+          // Send packet
+          await writer.write(packet);
+ 
+          // Wait for ACK/NAK
+          const { value } = await reader.read();
+          if (value[0] === ACK) {
+            console.log(`Ack ${blockNumber}`);
+            statusElement.textContent = `Status: Progress ${blockNumber} / ${chunks.length}`;
+            blockNumber++;
+          } else if (value[0] === NAK) {
+            console.warn(`Nack ${blockNumber}`);
+            statusElement.textContent = `Status: Fail ${blockNumber}`;
+            continue; // Retry
+          } else if (value[0] === CAN) {
+            throw new Error("Cancel");
+          } else {
+            throw new Error(`Unexpected: ${value[0]}`);
+          }
+        }
+ 
+        // Send EOT
+        await writer.write(new Uint8Array([EOT]));
+ 
+        // Wait ACK for EOT
+        const { value } = await reader.read();
+        if (value[0] === ACK) {
+          statusElement.textContent = "Status: Finish to send";
+        } else {
+          throw new Error("Error: EOT");
+        }
+      } catch (error) {
+        statusElement.textContent = `Error: ${error.message}`;
+        console.error("Error:", error);
+      } finally {
+        writer.releaseLock();
+        reader.releaseLock();
+      }
+    }
+ 
+    // CRC16 lookup table
+    const crc16Table = (() => {
+      const table = [];
+      for (let i = 0; i < 256; i++) {
+        let crc = i << 8;
+        for (let j = 0; j < 8; j++) {
+          if ((crc & 0x8000) !== 0) {
+            crc = (crc << 1) ^ 0x1021;
+          } else {
+            crc <<= 1;
+          }
+        }
+        table.push(crc & 0xFFFF);
+      }
+      return table;
+    })();
+ 
+    document.getElementById('sendButton').addEventListener('click', async () => {
+      const statusElement = document.getElementById('status');
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+ 
+      if (!file) {
+        statusElement.textContent = "Error: Select a file.";
+        return;
+      }
+ 
+      const fileData = new Uint8Array(await file.arrayBuffer());
+ 
+      let port;
+      try {
+        // Request a serial port
+        const filter = { usbVendorId: 0x10C4, usbProductId: 0xEA60 };
+        port = await navigator.serial.requestPort({ filters: [filter] });
+        await port.open({ baudRate: 115200 });
+ 
+        // Wait for "updater#"
+        statusElement.textContent = "Status: Wait for 'updater'...";
+        const promptFound = await waitForUpdaterPrompt(port, "updater");
+ 
+        if (!promptFound) {
+          statusElement.textContent = "Error: Prompt Not found";
+          return;
+        }
+ 
+        statusElement.textContent = "Status: Start to install";
+ 
+        // Send "install"
+        const writer = port.writable.getWriter();
+        await writer.write(new TextEncoder().encode("\n"));
+        await writer.write(new TextEncoder().encode("install\n"));
+        writer.releaseLock();
+ 
+        // Send a file via XMODEM
+        statusElement.textContent = "Status: Transfer XMODEM...";
+        await sendXmodemData(port, fileData);
+ 
+        // Wait for "updater#" again (without DTR reset or 'r' sending)
+        statusElement.textContent = "Status: Wait for 'updater' after XMODEM...";
+        const updaterPromptFound = await waitForUpdaterPrompt(port, "Saving package", false);
+        await waitForUpdaterPrompt(port, "updater", false);
+ 
+        if (!updaterPromptFound) {
+          statusElement.textContent = "Error: Install Failed";
+          return;
+        }
+ 
+        statusElement.textContent = "Status: Complete";
+      } catch (error) {
+        statusElement.textContent = `Error: ${error.message}`;
+      } finally {
+        if (port) {
+          await port.close();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
